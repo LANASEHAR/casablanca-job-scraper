@@ -9,10 +9,10 @@ import pandas as pd
 from sources import collect
 from contact_finder import find_contact
 
-ROOT = Path(__file__).resolve().parents[1]
-PROFILE_PATH = ROOT / "config" / "profile.json"
+ROOT = Path(__file__).resolve().parent
+PROFILE_PATH = ROOT / "profile.json"
 DATA_DIR = ROOT / "data"
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 def norm(x):
     return re.sub(r"\s+", " ", str(x or "").lower()).strip()
