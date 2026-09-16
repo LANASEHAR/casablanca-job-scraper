@@ -1,0 +1,89 @@
+name: Daily Job Scraper
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # Runs every day at 08:17 Casablanca time
+    - cron: "17 8 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    name: Scrape Jobs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # 1. Download the repository
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # 2. Install Python
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Run the scraper
+      - name: Run job scraper
+        env:
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+        run: |
+          python scraper.py
+
+      # 5. Show generated files
+      - name: Check results
+        run: |
+          echo "===== DATA DIRECTORY ====="
+          ls -lah data/ || true
+
+          echo ""
+          echo "===== JOBS CSV ====="
+          if [ -f data/jobs.csv ]; then
+            wc -l data/jobs.csv
+            head -5 data/jobs.csv
+          else
+            echo "jobs.csv was not created"
+          fi
+
+          echo ""
+          echo "===== JOBS JSON ====="
+          if [ -f data/jobs.json ]; then
+            wc -c data/jobs.json
+          else
+            echo "jobs.json was not created"
+          fi
+
+          echo ""
+          echo "===== CONTACTS CSV ====="
+          if [ -f data/contacts.csv ]; then
+            wc -l data/contacts.csv
+            head -5 data/contacts.csv
+          else
+            echo "contacts.csv was not created"
+          fi
+
+      # 6. Commit new results
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/jobs.csv data/jobs.json data/contacts.csv
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update daily job results"
+            git push
+          fi
