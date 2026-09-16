@@ -28,11 +28,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run scraper
-        env:
-          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
-        working-directory: src
-        run: python scraper.py
+   - name: Run scraper
+  env:
+    SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+  run: python scraper.py
 
       - name: Commit results
         run: |
